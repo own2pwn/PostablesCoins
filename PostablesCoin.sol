@@ -157,6 +157,7 @@ contract PostablesCoin is Owned {
         balances[this] = balances[this].sub(rewardAmount);
         balances[msg.sender] = balances[msg.sender].add(rewardAmount);
         msg.sender.transfer(rewardAmount);
+        Transfer(this, msg.sender, rewardAmount);
         return true;
     }
 }
