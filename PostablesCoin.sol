@@ -101,8 +101,8 @@ contract PostablesCoin is Owned {
         constant 
         returns (bool valid) 
     {
-        require(balances[_invoker] >= 2000);
-        require(_vestingDuration >= 4);
+        require(balances[_invoker] >= 2000000000000000000000);
+        require(_vestingDuration >= 4000000000000000000);
         require(_vestingAmount >= balances[_invoker].div(2));
         require(vestedBalances[_invoker].add(_vestingAmount) > vestedBalances[_invoker]);
         return true;
@@ -128,7 +128,35 @@ contract PostablesCoin is Owned {
         constant
         returns (uint256 vestingReward)
     {
+        require(vestedBalances[msg.sender] > 0);
         uint256 _vestingBalances = vestedBalances[msg.sender];
-        uint256 _rewardAmount = _vestingBalances.mul(0.1)
+        uint256 _rewardAmount = _vestingBalances.mul(100000000000000000);
+        return _rewardAmount;
+    }
+
+    function vestingRefundCheck(address _invoker)
+        private
+        constant
+        returns (bool valid)
+    {
+        uint256 _balance = vestedBalances[_invoker];
+        require(_balance > 0);
+        require(vestedBalances[_invoker].sub(_balance) > 0);
+        require(balances[this].sub(_balance) > 0);
+        require(balances[_invoker].add(_balance) > 0);
+        require(balances[_invoker].add(_balance) > balances[_invoker]);
+        return true;
+    }
+
+    function retrieveVestingRewards()
+        public
+        returns (bool rewarded)
+    {
+        require(vestingRefundCheck(msg.sender));
+        uint256 rewardAmount = calculateVestingReward();
+        balances[this] = balances[this].sub(rewardAmount);
+        balances[msg.sender] = balances[msg.sender].add(rewardAmount);
+        msg.sender.transfer(rewardAmount);
+        return true;
     }
 }
